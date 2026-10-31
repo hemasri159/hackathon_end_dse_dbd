@@ -1,0 +1,850 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Campus Lost & Found Platform | AI-Powered Item Matching</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./style.css">
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col font-sans antialiased">
+
+  <!-- Top Announcement / Campus Bar -->
+  <header class="bg-indigo-900 text-indigo-100 text-xs py-2 px-4 border-b border-indigo-800">
+    <div class="max-w-7xl mx-auto flex flex-wrap justify-between items-center gap-2">
+      <div class="flex items-center gap-2">
+        <span class="inline-block w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+        <span class="font-medium tracking-wide">University Campus Central Recovery Office &amp; Student Services</span>
+      </div>
+      <div class="flex items-center gap-4 text-indigo-200">
+        <span>📍 Central Hub: SAC Building Rm 104</span>
+        <span class="hidden sm:inline">🕒 Mon-Fri 8:00 AM - 7:00 PM</span>
+        <span id="backendStatusPill" class="px-2 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-950 text-emerald-300 border border-emerald-700/50 flex items-center gap-1">
+          <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span> Connected: API Online
+        </span>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Navigation Bar -->
+  <nav class="bg-white border-b border-slate-200 sticky top-0 z-40 shadow-sm backdrop-blur-md bg-white/95">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex justify-between h-16 items-center">
+        <!-- Logo -->
+        <div class="flex items-center gap-3 cursor-pointer" onclick="switchTab('items')">
+          <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-600 via-indigo-700 to-blue-500 flex items-center justify-center text-white shadow-md shadow-indigo-200">
+            <i data-lucide="compass" class="w-6 h-6"></i>
+          </div>
+          <div>
+            <div class="flex items-center gap-2">
+              <span class="font-bold text-lg text-slate-900 tracking-tight">Campus Lost &amp; Found</span>
+              <span class="bg-indigo-100 text-indigo-700 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider">AI Powered</span>
+            </div>
+            <p class="text-xs text-slate-500 font-medium">Smart Description Matching &amp; Verification</p>
+          </div>
+        </div>
+
+        <!-- Navigation Tabs -->
+        <div class="hidden md:flex items-center gap-1 bg-slate-100/80 p-1 rounded-xl border border-slate-200/60">
+          <button id="navTabItems" onclick="switchTab('items')" class="nav-tab px-3.5 py-1.5 rounded-lg text-sm font-semibold transition-all flex items-center gap-2 bg-white text-indigo-600 shadow-sm">
+            <i data-lucide="grid" class="w-4 h-4"></i> Browse Items
+          </button>
+          <button id="navTabMatches" onclick="switchTab('matches')" class="nav-tab px-3.5 py-1.5 rounded-lg text-sm font-semibold transition-all flex items-center gap-2 text-slate-600 hover:text-slate-900">
+            <i data-lucide="sparkles" class="w-4 h-4 text-amber-500"></i> AI Match Center
+            <span id="matchCounterBadge" class="bg-amber-100 text-amber-800 text-[11px] font-bold px-1.5 py-0.2 rounded-full">...</span>
+          </button>
+          <button id="navTabClaims" onclick="switchTab('claims')" class="nav-tab px-3.5 py-1.5 rounded-lg text-sm font-semibold transition-all flex items-center gap-2 text-slate-600 hover:text-slate-900">
+            <i data-lucide="shield-check" class="w-4 h-4 text-emerald-600"></i> Claims &amp; Verification
+            <span id="pendingClaimsCountBadge" class="bg-rose-100 text-rose-700 text-[11px] font-bold px-1.5 py-0.2 rounded-full hidden">0</span>
+          </button>
+          <button id="navTabStats" onclick="switchTab('stats')" class="nav-tab px-3.5 py-1.5 rounded-lg text-sm font-semibold transition-all flex items-center gap-2 text-slate-600 hover:text-slate-900">
+            <i data-lucide="bar-chart-3" class="w-4 h-4 text-blue-600"></i> Analytics &amp; Stats
+          </button>
+        </div>
+
+        <!-- Primary Action -->
+        <div class="flex items-center gap-3">
+          <button onclick="openReportModal()" class="inline-flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 active:scale-95 text-white px-4 py-2 rounded-xl text-sm font-semibold shadow-md shadow-indigo-200 transition-all">
+            <i data-lucide="plus-circle" class="w-4 h-4"></i>
+            <span>Report Item</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Mobile Tab Bar (sticky bottom for mobile) -->
+  <div class="md:hidden flex bg-white border-b border-slate-200 px-2 py-2 gap-1 overflow-x-auto">
+    <button onclick="switchTab('items')" class="flex-1 py-1.5 text-xs font-semibold rounded-lg text-center whitespace-nowrap px-3 bg-indigo-50 text-indigo-600">Browse</button>
+    <button onclick="switchTab('matches')" class="flex-1 py-1.5 text-xs font-semibold rounded-lg text-center whitespace-nowrap px-3 text-slate-600">AI Matches</button>
+    <button onclick="switchTab('claims')" class="flex-1 py-1.5 text-xs font-semibold rounded-lg text-center whitespace-nowrap px-3 text-slate-600">Claims</button>
+    <button onclick="switchTab('stats')" class="flex-1 py-1.5 text-xs font-semibold rounded-lg text-center whitespace-nowrap px-3 text-slate-600">Analytics</button>
+  </div>
+
+  <!-- MAIN CONTENT CONTAINER -->
+  <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
+
+    <!-- ========================================== -->
+    <!-- VIEW 1: BROWSE ITEMS (CATALOG) -->
+    <!-- ========================================== -->
+    <div id="viewItems" class="space-y-6">
+      
+      <!-- Hero Banner / Quick Action CTA -->
+      <div class="relative overflow-hidden rounded-2xl bg-gradient-to-r from-indigo-900 via-indigo-800 to-blue-900 text-white p-6 sm:p-8 shadow-xl">
+        <div class="absolute -right-10 -bottom-10 w-64 h-64 bg-indigo-500/20 rounded-full blur-2xl pointer-events-none"></div>
+        <div class="relative z-10 max-w-2xl space-y-3">
+          <div class="inline-flex items-center gap-2 px-2.5 py-1 rounded-full bg-white/10 backdrop-blur-sm border border-white/15 text-indigo-200 text-xs font-medium">
+            <i data-lucide="zap" class="w-3.5 h-3.5 text-amber-300"></i> Instant NLP &amp; Description Similarity Matching
+          </div>
+          <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight">
+            Lost something on campus? Or found someone’s belongings?
+          </h1>
+          <p class="text-sm text-indigo-100/90 leading-relaxed">
+            Report lost or found belongings across campus locations. Our smart Python description engine automatically correlates categories, brands, locations, dates, and keywords to reunite you with your items.
+          </p>
+          <div class="flex flex-wrap gap-3 pt-2">
+            <button onclick="openReportModal('lost')" class="inline-flex items-center gap-2 bg-rose-500 hover:bg-rose-600 text-white px-4 py-2 rounded-xl text-sm font-semibold shadow-md shadow-rose-900/40 transition-all">
+              <i data-lucide="search" class="w-4 h-4"></i> I Lost an Item
+            </button>
+            <button onclick="openReportModal('found')" class="inline-flex items-center gap-2 bg-emerald-500 hover:bg-emerald-600 text-white px-4 py-2 rounded-xl text-sm font-semibold shadow-md shadow-emerald-900/40 transition-all">
+              <i data-lucide="check-circle-2" class="w-4 h-4"></i> I Found an Item
+            </button>
+            <button onclick="switchTab('matches')" class="inline-flex items-center gap-2 bg-white/15 hover:bg-white/25 text-white px-4 py-2 rounded-xl text-sm font-semibold backdrop-blur-sm transition-all border border-white/20">
+              <i data-lucide="sparkles" class="w-4 h-4 text-amber-300"></i> View High Matches
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Filter & Search Control Bar -->
+      <div class="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-sm space-y-4">
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
+          
+          <!-- Search Input -->
+          <div class="relative lg:col-span-2">
+            <i data-lucide="search" class="w-4 h-4 text-slate-400 absolute left-3.5 top-3"></i>
+            <input 
+              id="filterSearch" 
+              type="text" 
+              placeholder="Search items, keywords, brands, colors..." 
+              oninput="debouncedFetchItems()"
+              class="w-full pl-10 pr-4 py-2 rounded-xl border border-slate-200 bg-slate-50/50 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white transition-all"
+            >
+          </div>
+
+          <!-- Type Selector (All, Lost, Found) -->
+          <div>
+            <select id="filterType" onchange="fetchItems()" class="w-full px-3 py-2 rounded-xl border border-slate-200 bg-slate-50/50 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+              <option value="">All Types (Lost &amp; Found)</option>
+              <option value="lost">🔴 Lost Items Only</option>
+              <option value="found">🟢 Found Items Only</option>
+            </select>
+          </div>
+
+          <!-- Category Selector -->
+          <div>
+            <select id="filterCategory" onchange="fetchItems()" class="w-full px-3 py-2 rounded-xl border border-slate-200 bg-slate-50/50 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+              <option value="">All Categories</option>
+              <option value="Electronics">Electronics</option>
+              <option value="Bags & Wallets">Bags &amp; Wallets</option>
+              <option value="Keys">Keys</option>
+              <option value="Books & Stationery">Books &amp; Stationery</option>
+              <option value="Bottles & Containers">Bottles &amp; Containers</option>
+              <option value="Clothing">Clothing</option>
+              <option value="Jewelry & Accessories">Jewelry &amp; Accessories</option>
+              <option value="Other">Other</option>
+            </select>
+          </div>
+
+          <!-- Location Selector -->
+          <div>
+            <select id="filterLocation" onchange="fetchItems()" class="w-full px-3 py-2 rounded-xl border border-slate-200 bg-slate-50/50 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+              <option value="">All Campus Locations</option>
+            </select>
+          </div>
+
+        </div>
+
+        <!-- Filter Sub-row: Status tags & active counter -->
+        <div class="flex flex-wrap items-center justify-between gap-3 pt-2 border-t border-slate-100 text-xs text-slate-500">
+          <div class="flex items-center gap-2">
+            <span class="font-medium text-slate-700">Filter by Status:</span>
+            <button onclick="setStatusFilter('')" class="status-btn active px-2.5 py-1 rounded-lg border border-slate-200 font-semibold" data-status="">All</button>
+            <button onclick="setStatusFilter('open')" class="status-btn px-2.5 py-1 rounded-lg border border-slate-200 font-semibold" data-status="open">Open</button>
+            <button onclick="setStatusFilter('claim_pending')" class="status-btn px-2.5 py-1 rounded-lg border border-slate-200 font-semibold" data-status="claim_pending">Claim Pending</button>
+            <button onclick="setStatusFilter('returned')" class="status-btn px-2.5 py-1 rounded-lg border border-slate-200 font-semibold" data-status="returned">Returned / Resolved</button>
+          </div>
+
+          <div class="flex items-center gap-3">
+            <span id="itemsCountText">Loading campus inventory...</span>
+            <button onclick="fetchItems()" class="text-indigo-600 hover:text-indigo-800 flex items-center gap-1 font-semibold">
+              <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i> Refresh
+            </button>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Items Grid -->
+      <div id="itemsGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+        <!-- Injected via JavaScript -->
+      </div>
+
+      <!-- Empty State -->
+      <div id="itemsEmptyState" class="hidden text-center py-16 px-4 bg-white rounded-2xl border border-dashed border-slate-300">
+        <div class="w-16 h-16 rounded-full bg-slate-100 text-slate-400 mx-auto flex items-center justify-center mb-4">
+          <i data-lucide="inbox" class="w-8 h-8"></i>
+        </div>
+        <h3 class="text-lg font-bold text-slate-800">No items match your filter criteria</h3>
+        <p class="text-sm text-slate-500 max-w-md mx-auto mt-1 mb-5">Try clearing filters or search queries, or be the first to report this item to our campus database.</p>
+        <button onclick="resetFilters()" class="px-4 py-2 rounded-xl text-sm font-semibold bg-indigo-50 text-indigo-600 hover:bg-indigo-100">
+          Reset All Filters
+        </button>
+      </div>
+
+    </div>
+
+
+    <!-- ========================================== -->
+    <!-- VIEW 2: AI MATCH CENTER -->
+    <!-- ========================================== -->
+    <div id="viewMatches" class="hidden space-y-6">
+      
+      <!-- Match Center Header -->
+      <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <div>
+          <div class="flex items-center gap-2">
+            <div class="p-2 bg-amber-50 text-amber-600 rounded-xl">
+              <i data-lucide="sparkles" class="w-6 h-6"></i>
+            </div>
+            <div>
+              <h2 class="text-xl font-bold text-slate-900">AI Description Match Engine</h2>
+              <p class="text-sm text-slate-500">Autonomous multi-factor matching across Lost and Found item records</p>
+            </div>
+          </div>
+        </div>
+        <div class="flex items-center gap-3">
+          <button onclick="fetchAllMatches()" class="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl text-sm font-semibold border border-slate-200 text-slate-700 hover:bg-slate-50">
+            <i data-lucide="refresh-cw" class="w-4 h-4"></i> Run Re-Scan
+          </button>
+          <button onclick="openCustomMatcherModal()" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold bg-gradient-to-r from-amber-500 to-amber-600 text-white shadow-md shadow-amber-200 hover:from-amber-600 hover:to-amber-700">
+            <i data-lucide="play" class="w-4 h-4"></i> Test Custom Matcher
+          </button>
+        </div>
+      </div>
+
+      <!-- Algorithm Overview Cards -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div class="bg-white p-4 rounded-xl border border-slate-200/80 shadow-sm flex items-start gap-3">
+          <div class="w-9 h-9 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold text-sm">35%</div>
+          <div>
+            <h4 class="text-xs font-bold text-slate-800 uppercase tracking-wider">Semantic Text &amp; NLP</h4>
+            <p class="text-xs text-slate-500 mt-0.5">Token Jaccard &amp; n-gram similarity on titles &amp; descriptions</p>
+          </div>
+        </div>
+        <div class="bg-white p-4 rounded-xl border border-slate-200/80 shadow-sm flex items-start gap-3">
+          <div class="w-9 h-9 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center font-bold text-sm">25%</div>
+          <div>
+            <h4 class="text-xs font-bold text-slate-800 uppercase tracking-wider">Brand &amp; Color Extraction</h4>
+            <p class="text-xs text-slate-500 mt-0.5">Identifies Apple, Casio, Nike, colors, and specific object types</p>
+          </div>
+        </div>
+        <div class="bg-white p-4 rounded-xl border border-slate-200/80 shadow-sm flex items-start gap-3">
+          <div class="w-9 h-9 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center font-bold text-sm">25%</div>
+          <div>
+            <h4 class="text-xs font-bold text-slate-800 uppercase tracking-wider">Location &amp; Category</h4>
+            <p class="text-xs text-slate-500 mt-0.5">Campus zone clustering and category taxonomy matching</p>
+          </div>
+        </div>
+        <div class="bg-white p-4 rounded-xl border border-slate-200/80 shadow-sm flex items-start gap-3">
+          <div class="w-9 h-9 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center font-bold text-sm">15%</div>
+          <div>
+            <h4 class="text-xs font-bold text-slate-800 uppercase tracking-wider">Date Proximity Decay</h4>
+            <p class="text-xs text-slate-500 mt-0.5">Validates timeline (Lost &le; Found within temporal windows)</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Matches Container -->
+      <div id="allMatchesContainer" class="space-y-4">
+        <!-- Injected via JavaScript -->
+      </div>
+
+    </div>
+
+
+    <!-- ========================================== -->
+    <!-- VIEW 3: CLAIMS & VERIFICATION -->
+    <!-- ========================================== -->
+    <div id="viewClaims" class="hidden space-y-6">
+      
+      <!-- Claims Header -->
+      <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <div>
+          <div class="flex items-center gap-2">
+            <div class="p-2 bg-emerald-50 text-emerald-600 rounded-xl">
+              <i data-lucide="shield-check" class="w-6 h-6"></i>
+            </div>
+            <div>
+              <h2 class="text-xl font-bold text-slate-900">Campus Claims &amp; Verification Desk</h2>
+              <p class="text-sm text-slate-500">Student ownership claims, secret identifier audits, and resolution management</p>
+            </div>
+          </div>
+        </div>
+        
+        <div class="flex items-center gap-2">
+          <select id="claimsFilterStatus" onchange="fetchClaims()" class="px-3 py-2 rounded-xl border border-slate-200 bg-slate-50 text-sm font-medium">
+            <option value="">All Claims</option>
+            <option value="pending" selected>Pending Review</option>
+            <option value="approved">Approved &amp; Verified</option>
+            <option value="rejected">Rejected Claims</option>
+          </select>
+          <button onclick="fetchClaims()" class="p-2 border border-slate-200 rounded-xl hover:bg-slate-50 text-slate-600">
+            <i data-lucide="refresh-cw" class="w-4 h-4"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Claims List -->
+      <div id="claimsList" class="space-y-4">
+        <!-- Injected via JavaScript -->
+      </div>
+
+    </div>
+
+
+    <!-- ========================================== -->
+    <!-- VIEW 4: CAMPUS ANALYTICS & STATS -->
+    <!-- ========================================== -->
+    <div id="viewStats" class="hidden space-y-6">
+      
+      <!-- Stats KPI Row -->
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+          <div class="flex items-center justify-between text-slate-500 text-xs font-semibold uppercase tracking-wider mb-2">
+            <span>Total Reported</span>
+            <i data-lucide="layers" class="w-4 h-4 text-indigo-500"></i>
+          </div>
+          <div id="statTotalItems" class="text-3xl font-extrabold text-slate-900">...</div>
+          <p class="text-xs text-slate-400 mt-1">Campus inventory records</p>
+        </div>
+
+        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+          <div class="flex items-center justify-between text-slate-500 text-xs font-semibold uppercase tracking-wider mb-2">
+            <span>Lost Items</span>
+            <i data-lucide="help-circle" class="w-4 h-4 text-rose-500"></i>
+          </div>
+          <div id="statTotalLost" class="text-3xl font-extrabold text-rose-600">...</div>
+          <p class="text-xs text-slate-400 mt-1">Awaiting discovery</p>
+        </div>
+
+        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+          <div class="flex items-center justify-between text-slate-500 text-xs font-semibold uppercase tracking-wider mb-2">
+            <span>Found Items</span>
+            <i data-lucide="check-circle" class="w-4 h-4 text-emerald-500"></i>
+          </div>
+          <div id="statTotalFound" class="text-3xl font-extrabold text-emerald-600">...</div>
+          <p class="text-xs text-slate-400 mt-1">Safely in holding</p>
+        </div>
+
+        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+          <div class="flex items-center justify-between text-slate-500 text-xs font-semibold uppercase tracking-wider mb-2">
+            <span>Recovery Rate</span>
+            <i data-lucide="award" class="w-4 h-4 text-amber-500"></i>
+          </div>
+          <div id="statRecoveryRate" class="text-3xl font-extrabold text-indigo-600">...%</div>
+          <p class="text-xs text-slate-400 mt-1">Reunited with owners</p>
+        </div>
+      </div>
+
+      <!-- Graphs & Hotspots Row -->
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        
+        <!-- Hotspots Card -->
+        <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+          <div class="flex items-center justify-between">
+            <h3 class="font-bold text-slate-900 flex items-center gap-2">
+              <i data-lucide="map-pin" class="w-4 h-4 text-rose-500"></i> Top Campus Lost &amp; Found Hotspots
+            </h3>
+            <span class="text-xs text-slate-400 font-medium">By item volume</span>
+          </div>
+          <div id="hotspotsList" class="space-y-3">
+            <!-- Injected via JavaScript -->
+          </div>
+        </div>
+
+        <!-- Categories Distribution Card -->
+        <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+          <div class="flex items-center justify-between">
+            <h3 class="font-bold text-slate-900 flex items-center gap-2">
+              <i data-lucide="pie-chart" class="w-4 h-4 text-blue-500"></i> Most Common Lost Categories
+            </h3>
+            <span class="text-xs text-slate-400 font-medium">Item types</span>
+          </div>
+          <div id="categoriesList" class="space-y-3">
+            <!-- Injected via JavaScript -->
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Audit Activity Stream -->
+      <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+        <div class="flex items-center justify-between">
+          <h3 class="font-bold text-slate-900 flex items-center gap-2">
+            <i data-lucide="activity" class="w-4 h-4 text-emerald-500"></i> Live Campus Activity Stream
+          </h3>
+          <span class="text-xs text-slate-400 font-medium">Real-time audit log</span>
+        </div>
+        <div id="activityStream" class="divide-y divide-slate-100 max-h-96 overflow-y-auto">
+          <!-- Injected via JavaScript -->
+        </div>
+      </div>
+
+    </div>
+
+  </main>
+
+
+  <!-- ========================================== -->
+  <!-- MODALS -->
+  <!-- ========================================== -->
+
+  <!-- 1. REPORT ITEM MODAL -->
+  <div id="modalReport" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm hidden items-center justify-center p-4 overflow-y-auto">
+    <div class="bg-white rounded-3xl max-w-xl w-full shadow-2xl border border-slate-200 overflow-hidden my-8 animate-in fade-in zoom-in-95 duration-150">
+      
+      <!-- Modal Header -->
+      <div class="px-6 py-5 bg-gradient-to-r from-indigo-900 to-indigo-800 text-white flex justify-between items-center">
+        <div class="flex items-center gap-3">
+          <div class="p-2 rounded-xl bg-white/10 text-white">
+            <i data-lucide="clipboard-edit" class="w-5 h-5"></i>
+          </div>
+          <div>
+            <h3 class="text-lg font-bold">Report an Item</h3>
+            <p class="text-xs text-indigo-200">Submit item details for automatic campus matching</p>
+          </div>
+        </div>
+        <button onclick="closeReportModal()" class="text-indigo-200 hover:text-white p-1 rounded-lg hover:bg-white/10">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <!-- Modal Body / Form -->
+      <form id="formReportItem" onsubmit="submitReportItem(event)" class="p-6 space-y-4">
+        
+        <!-- Type Selection Toggle -->
+        <div>
+          <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5">What are you reporting? *</label>
+          <div class="grid grid-cols-2 gap-3">
+            <label class="cursor-pointer">
+              <input type="radio" name="itemType" value="lost" checked onchange="updateReportFormLabels()" class="peer sr-only">
+              <div class="p-3 rounded-xl border-2 border-slate-200 text-center peer-checked:border-rose-500 peer-checked:bg-rose-50/50 peer-checked:text-rose-700 transition-all font-semibold text-sm flex items-center justify-center gap-2">
+                <i data-lucide="help-circle" class="w-4 h-4 text-rose-500"></i> I Lost an Item
+              </div>
+            </label>
+            <label class="cursor-pointer">
+              <input type="radio" name="itemType" value="found" onchange="updateReportFormLabels()" class="peer sr-only">
+              <div class="p-3 rounded-xl border-2 border-slate-200 text-center peer-checked:border-emerald-500 peer-checked:bg-emerald-50/50 peer-checked:text-emerald-700 transition-all font-semibold text-sm flex items-center justify-center gap-2">
+                <i data-lucide="check-circle-2" class="w-4 h-4 text-emerald-500"></i> I Found an Item
+              </div>
+            </label>
+          </div>
+        </div>
+
+        <!-- Title -->
+        <div>
+          <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">Item Title / Headline *</label>
+          <input 
+            type="text" 
+            id="reportTitle" 
+            required 
+            placeholder="e.g. Space Gray iPad Air with Apple Pencil" 
+            oninput="checkInstantMatchPreview()"
+            class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+          >
+        </div>
+
+        <!-- Category & Location Grid -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">Category *</label>
+            <select id="reportCategory" required onchange="checkInstantMatchPreview()" class="w-full px-3 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+              <option value="">Select Category</option>
+              <option value="Electronics">Electronics</option>
+              <option value="Bags & Wallets">Bags &amp; Wallets</option>
+              <option value="Keys">Keys</option>
+              <option value="Books & Stationery">Books &amp; Stationery</option>
+              <option value="Bottles & Containers">Bottles &amp; Containers</option>
+              <option value="Clothing">Clothing</option>
+              <option value="Jewelry & Accessories">Jewelry &amp; Accessories</option>
+              <option value="Other">Other</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">Campus Location *</label>
+            <select id="reportLocation" required onchange="checkInstantMatchPreview()" class="w-full px-3 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+              <option value="">Select Location</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Date Occurred & Image URL -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label id="lblDateOccurred" class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">Date Lost *</label>
+            <input type="date" id="reportDate" required class="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+          </div>
+          <div>
+            <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">Photo URL (Optional)</label>
+            <input type="url" id="reportImageUrl" placeholder="https://..." class="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+          </div>
+        </div>
+
+        <!-- Description -->
+        <div>
+          <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">Detailed Description *</label>
+          <textarea 
+            id="reportDescription" 
+            required 
+            rows="3" 
+            placeholder="Describe appearance, brand name, color, stickers, scratches, case material, etc." 
+            oninput="checkInstantMatchPreview()"
+            class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+          ></textarea>
+        </div>
+
+        <!-- Secret Details / Verification Mark -->
+        <div class="p-3 bg-amber-50/60 rounded-xl border border-amber-200/80">
+          <label class="block text-xs font-bold text-amber-900 mb-1 flex items-center gap-1.5">
+            <i data-lucide="lock" class="w-3.5 h-3.5 text-amber-700"></i>
+            Secret Identifying Details (For Claim Verification)
+          </label>
+          <input 
+            type="text" 
+            id="reportSecret" 
+            placeholder="e.g. Serial #, lock screen photo description, items inside pocket, engrave text" 
+            class="w-full px-3 py-1.5 rounded-lg border border-amber-300/80 bg-white text-xs focus:outline-none focus:ring-2 focus:ring-amber-500"
+          >
+          <p class="text-[11px] text-amber-700/80 mt-1">This detail is kept private and used by campus staff to verify rightful ownership when a claim is filed.</p>
+        </div>
+
+        <!-- Reporter Information -->
+        <div class="border-t border-slate-100 pt-3 space-y-3">
+          <label class="block text-xs font-bold uppercase tracking-wider text-slate-600">Your Contact Info</label>
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div>
+              <input type="text" id="reportName" required placeholder="Full Name *" class="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+            </div>
+            <div>
+              <input type="email" id="reportEmail" required placeholder="Campus Email *" class="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+            </div>
+            <div>
+              <input type="tel" id="reportPhone" placeholder="Phone (Optional)" class="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+            </div>
+          </div>
+        </div>
+
+        <!-- Instant Match Suggestion Banner (Appears dynamically while typing) -->
+        <div id="reportInstantMatchBox" class="hidden p-3 rounded-xl bg-indigo-50 border border-indigo-200 text-xs text-indigo-900 space-y-2">
+          <div class="flex items-center justify-between font-bold">
+            <span class="flex items-center gap-1.5 text-indigo-700">
+              <i data-lucide="sparkles" class="w-4 h-4 text-amber-500"></i> Potential existing items found!
+            </span>
+            <span id="instantMatchCount" class="bg-indigo-200 text-indigo-800 px-2 py-0.5 rounded-full text-[10px]">2 matches</span>
+          </div>
+          <div id="instantMatchList" class="space-y-1"></div>
+        </div>
+
+        <!-- Modal Actions -->
+        <div class="flex items-center justify-end gap-3 pt-3 border-t border-slate-100">
+          <button type="button" onclick="closeReportModal()" class="px-4 py-2.5 rounded-xl border border-slate-200 text-slate-700 text-sm font-semibold hover:bg-slate-50">
+            Cancel
+          </button>
+          <button type="submit" id="btnSubmitReport" class="px-6 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold shadow-md shadow-indigo-200 transition-all flex items-center gap-2">
+            <i data-lucide="check" class="w-4 h-4"></i> Submit Report
+          </button>
+        </div>
+
+      </form>
+    </div>
+  </div>
+
+
+  <!-- 2. ITEM DETAILS & MATCH MODAL -->
+  <div id="modalItemDetails" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm hidden items-center justify-center p-4 overflow-y-auto">
+    <div class="bg-white rounded-3xl max-w-2xl w-full shadow-2xl border border-slate-200 overflow-hidden my-8 animate-in fade-in zoom-in-95 duration-150">
+      
+      <div id="itemDetailHeader" class="px-6 py-5 bg-slate-900 text-white flex justify-between items-center">
+        <div class="flex items-center gap-3">
+          <span id="detailTypeBadge" class="px-2.5 py-1 rounded-full text-xs font-bold uppercase tracking-wider">Type</span>
+          <span id="detailStatusBadge" class="px-2.5 py-1 rounded-full text-xs font-bold uppercase tracking-wider">Status</span>
+        </div>
+        <button onclick="closeItemDetailsModal()" class="text-slate-300 hover:text-white p-1 rounded-lg hover:bg-white/10">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <div class="p-6 space-y-5 max-h-[80vh] overflow-y-auto">
+        
+        <!-- Image and Title Row -->
+        <div class="flex flex-col sm:flex-row gap-5 items-start">
+          <img id="detailImage" src="" alt="Item" class="w-full sm:w-44 h-44 object-cover rounded-2xl border border-slate-200 shadow-sm bg-slate-100 flex-shrink-0">
+          <div class="space-y-2 flex-1">
+            <h2 id="detailTitle" class="text-xl font-extrabold text-slate-900">Item Title</h2>
+            <div class="flex flex-wrap gap-2 text-xs text-slate-500">
+              <span class="inline-flex items-center gap-1 bg-slate-100 px-2.5 py-1 rounded-lg font-medium">
+                <i data-lucide="tag" class="w-3.5 h-3.5 text-indigo-500"></i> <span id="detailCategory">Category</span>
+              </span>
+              <span class="inline-flex items-center gap-1 bg-slate-100 px-2.5 py-1 rounded-lg font-medium">
+                <i data-lucide="map-pin" class="w-3.5 h-3.5 text-rose-500"></i> <span id="detailLocation">Location</span>
+              </span>
+              <span class="inline-flex items-center gap-1 bg-slate-100 px-2.5 py-1 rounded-lg font-medium">
+                <i data-lucide="calendar" class="w-3.5 h-3.5 text-blue-500"></i> <span id="detailDate">Date</span>
+              </span>
+            </div>
+            <div class="pt-2 text-xs text-slate-500 space-y-1">
+              <div><strong>Reported By:</strong> <span id="detailReporter">...</span></div>
+              <div><strong>Contact:</strong> <span id="detailContact">...</span></div>
+              <div><strong>Reported Date:</strong> <span id="detailReportedDate">...</span></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Description -->
+        <div>
+          <h4 class="text-xs font-bold uppercase tracking-wider text-slate-500 mb-1">Description</h4>
+          <p id="detailDescription" class="text-sm text-slate-700 bg-slate-50 p-3.5 rounded-xl border border-slate-200/80 leading-relaxed"></p>
+        </div>
+
+        <!-- Secret Mark (if present) -->
+        <div id="detailSecretBox" class="p-3 bg-amber-50 rounded-xl border border-amber-200 text-xs text-amber-900 space-y-1">
+          <div class="font-bold flex items-center gap-1 text-amber-800">
+            <i data-lucide="key" class="w-3.5 h-3.5"></i> Secret Verification Marker:
+          </div>
+          <p id="detailSecretText" class="font-mono text-xs"></p>
+        </div>
+
+        <!-- Top Matches for this item -->
+        <div class="border-t border-slate-200 pt-4 space-y-3">
+          <div class="flex items-center justify-between">
+            <h4 class="text-sm font-bold text-slate-900 flex items-center gap-2">
+              <i data-lucide="sparkles" class="w-4 h-4 text-amber-500"></i>
+              AI Matched Suggestions (<span id="detailMatchesCount">0</span>)
+            </h4>
+            <span class="text-xs text-slate-400">Ranked by similarity</span>
+          </div>
+
+          <div id="detailMatchesList" class="space-y-3">
+            <!-- Injected dynamically -->
+          </div>
+        </div>
+
+        <!-- Modal Actions Footer -->
+        <div class="border-t border-slate-200 pt-4 flex flex-wrap items-center justify-between gap-3">
+          <div class="flex items-center gap-2">
+            <label class="text-xs text-slate-500 font-medium">Update Status:</label>
+            <select id="detailStatusSelect" onchange="updateCurrentItemStatus()" class="px-2.5 py-1.5 rounded-lg border border-slate-200 text-xs font-semibold">
+              <option value="open">Open</option>
+              <option value="claim_pending">Claim Pending</option>
+              <option value="claimed">Claimed</option>
+              <option value="returned">Returned / Resolved</option>
+              <option value="closed">Closed</option>
+            </select>
+          </div>
+
+          <div class="flex items-center gap-2">
+            <button id="btnClaimItem" onclick="openClaimModalFromDetails()" class="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-md shadow-emerald-200 flex items-center gap-1.5">
+              <i data-lucide="hand" class="w-3.5 h-3.5"></i> File Ownership Claim
+            </button>
+            <button onclick="closeItemDetailsModal()" class="px-4 py-2 rounded-xl border border-slate-200 text-slate-700 text-xs font-semibold hover:bg-slate-50">
+              Close
+            </button>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+  </div>
+
+
+  <!-- 3. FILE CLAIM MODAL -->
+  <div id="modalClaim" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm hidden items-center justify-center p-4 overflow-y-auto">
+    <div class="bg-white rounded-3xl max-w-lg w-full shadow-2xl border border-slate-200 overflow-hidden my-8 animate-in fade-in zoom-in-95 duration-150">
+      
+      <div class="px-6 py-5 bg-gradient-to-r from-emerald-800 to-teal-900 text-white flex justify-between items-center">
+        <div class="flex items-center gap-3">
+          <div class="p-2 rounded-xl bg-white/10 text-white">
+            <i data-lucide="shield-check" class="w-5 h-5"></i>
+          </div>
+          <div>
+            <h3 class="text-lg font-bold">Claim Found Item</h3>
+            <p class="text-xs text-emerald-200">Submit proof of ownership for verification</p>
+          </div>
+        </div>
+        <button onclick="closeClaimModal()" class="text-emerald-200 hover:text-white p-1 rounded-lg hover:bg-white/10">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <form id="formSubmitClaim" onsubmit="submitClaimForm(event)" class="p-6 space-y-4">
+        <input type="hidden" id="claimItemId">
+        
+        <div class="p-3 bg-slate-50 rounded-xl border border-slate-200 text-xs">
+          <div class="text-slate-500 font-semibold">Claiming item:</div>
+          <div id="claimItemTitleDisplay" class="font-bold text-slate-800 text-sm mt-0.5">Title</div>
+        </div>
+
+        <div class="space-y-3">
+          <div>
+            <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">Your Full Name *</label>
+            <input type="text" id="claimName" required placeholder="Alex Rivera" class="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
+          </div>
+
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">Student / Staff ID *</label>
+              <input type="text" id="claimStudentId" required placeholder="STU-99201" class="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
+            </div>
+            <div>
+              <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">Campus Email *</label>
+              <input type="email" id="claimEmail" required placeholder="name@campus.edu" class="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">Phone Number</label>
+            <input type="tel" id="claimPhone" placeholder="555-0199" class="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
+          </div>
+
+          <div>
+            <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">Proof of Ownership / Distinctive Details *</label>
+            <textarea 
+              id="claimProof" 
+              required 
+              rows="3" 
+              placeholder="State serial numbers, lock-screen wallpaper, stickers, scratches, receipts, or items inside that prove it belongs to you." 
+              class="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+            ></textarea>
+          </div>
+
+          <div>
+            <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">Proof Photo URL or Receipt (Optional)</label>
+            <input type="url" id="claimProofImage" placeholder="https://..." class="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
+          </div>
+        </div>
+
+        <div class="flex items-center justify-end gap-3 pt-3 border-t border-slate-100">
+          <button type="button" onclick="closeClaimModal()" class="px-4 py-2.5 rounded-xl border border-slate-200 text-slate-700 text-sm font-semibold hover:bg-slate-50">
+            Cancel
+          </button>
+          <button type="submit" class="px-6 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold shadow-md shadow-emerald-200 transition-all flex items-center gap-2">
+            <i data-lucide="check" class="w-4 h-4"></i> Submit Claim
+          </button>
+        </div>
+      </form>
+
+    </div>
+  </div>
+
+
+  <!-- 4. CUSTOM MATCH TESTER MODAL -->
+  <div id="modalCustomMatcher" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm hidden items-center justify-center p-4 overflow-y-auto">
+    <div class="bg-white rounded-3xl max-w-2xl w-full shadow-2xl border border-slate-200 overflow-hidden my-8 animate-in fade-in zoom-in-95 duration-150">
+      
+      <div class="px-6 py-5 bg-gradient-to-r from-amber-600 to-amber-700 text-white flex justify-between items-center">
+        <div class="flex items-center gap-3">
+          <div class="p-2 rounded-xl bg-white/10 text-white">
+            <i data-lucide="sparkles" class="w-5 h-5"></i>
+          </div>
+          <div>
+            <h3 class="text-lg font-bold">Interactive AI Match Simulator</h3>
+            <p class="text-xs text-amber-100">Test descriptions directly against current campus inventory</p>
+          </div>
+        </div>
+        <button onclick="closeCustomMatcherModal()" class="text-amber-100 hover:text-white p-1 rounded-lg hover:bg-white/10">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <div class="p-6 space-y-4">
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div>
+            <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">Query Type</label>
+            <select id="simType" class="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm">
+              <option value="lost">Lost Item Query</option>
+              <option value="found">Found Item Query</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">Category</label>
+            <select id="simCategory" class="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm">
+              <option value="Electronics">Electronics</option>
+              <option value="Bags & Wallets">Bags &amp; Wallets</option>
+              <option value="Keys">Keys</option>
+              <option value="Bottles & Containers">Bottles &amp; Containers</option>
+              <option value="Books & Stationery">Books &amp; Stationery</option>
+              <option value="Jewelry & Accessories">Jewelry &amp; Accessories</option>
+              <option value="Clothing">Clothing</option>
+              <option value="Other">Other</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">Location (Optional)</label>
+            <input type="text" id="simLocation" placeholder="e.g. Central Library" class="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm">
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">Title</label>
+          <input type="text" id="simTitle" value="White AirPods Pro 2 earbuds" class="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm">
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">Description / Keywords</label>
+          <textarea id="simDescription" rows="2" class="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm">Lost white Apple earbuds with charging case and Pikachu sticker on bottom.</textarea>
+        </div>
+
+        <button onclick="runCustomMatchSimulation()" class="w-full py-2.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-bold text-sm shadow-md shadow-amber-200 flex items-center justify-center gap-2">
+          <i data-lucide="play" class="w-4 h-4"></i> Run NLP Similarity Engine
+        </button>
+
+        <!-- Simulation Results -->
+        <div id="simResultsBox" class="border-t border-slate-200 pt-3 space-y-2">
+          <h4 class="text-xs font-bold uppercase tracking-wider text-slate-500">Live Scored Matches:</h4>
+          <div id="simResultsList" class="space-y-2 max-h-60 overflow-y-auto">
+            <p class="text-xs text-slate-400 italic">Click 'Run NLP Similarity Engine' above to test.</p>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Toast Notification Container -->
+  <div id="toastContainer" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2 pointer-events-none"></div>
+
+  <!-- Footer -->
+  <footer class="bg-white border-t border-slate-200 mt-12 py-6 text-center text-xs text-slate-500">
+    <div class="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row justify-between items-center gap-2">
+      <div>
+        <strong>Campus Lost &amp; Found System</strong> &bull; Complete Database &amp; Automated Match Architecture
+      </div>
+      <div class="text-slate-400">
+        Backend: FastAPI + SQLite + Python NLP Matcher &bull; Frontend: Modern Responsive SPA
+      </div>
+    </div>
+  </footer>
+
+  <script src="./app.js"></script>
+</body>
+</html>
